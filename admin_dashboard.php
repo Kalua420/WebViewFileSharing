@@ -23,17 +23,8 @@ require_once 'db_connection.php';
 // Fetch data for dashboard
 $managers = $conn->query("SELECT m.*, b.branch_name FROM manager m LEFT JOIN branch b ON m.bid = b.id");
 $branches = $conn->query("SELECT b.*, m.username FROM branch b left JOIN manager m ON b.id = m.bid ORDER BY b.id");
-$users = $conn->query("SELECT u.*, b.branch_name 
-        FROM users u 
-        LEFT JOIN branch b ON u.bid = b.id 
-        ORDER BY u.created_at DESC");
-$logs = $conn->query("SELECT l.*, 
-             s.id as sender_id,
-             r.id as receiver_id
-             FROM logs l
-             LEFT JOIN users s ON l.sender_id = s.id
-             LEFT JOIN users r ON l.receiver_id = r.id
-             ORDER BY l.timestamp DESC");
+$users = $conn->query("SELECT u.*, b.branch_name FROM users u LEFT JOIN branch b ON u.bid = b.id ORDER BY u.created_at DESC");
+$logs = $conn->query("SELECT l.*,  s.id as sender_id, r.id as receiver_id FROM logs l LEFT JOIN users s ON l.sender_id = s.id LEFT JOIN users r ON l.receiver_id = r.id ORDER BY l.timestamp DESC");
 
 // Count statistics
 $totalManagers = $conn->query("SELECT COUNT(*) as count FROM manager")->fetch_assoc()['count'];
@@ -41,386 +32,6 @@ $totalBranches = $conn->query("SELECT COUNT(*) as count FROM branch")->fetch_ass
 $totalUsers = $conn->query("SELECT COUNT(*) as count FROM users")->fetch_assoc()['count'];
 $pendingUsers = $conn->query("SELECT COUNT(*) as count FROM users WHERE status='pending'")->fetch_assoc()['count'];
 ?>
-
-<style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-        }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: 250px;
-            background-color: #343a40;
-            color: white;
-            padding: 20px 0;
-            position: fixed;
-            height: 100vh;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid #4b545c;
-        }
-
-        .sidebar-nav ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar-nav a {
-            display: block;
-            padding: 15px 20px;
-            color: white;
-            text-decoration: none;
-            transition: background-color 0.3s;
-        }
-
-        .sidebar-nav a:hover,
-        .sidebar-nav a.active {
-            background-color: #4b545c;
-        }
-
-        .sidebar-nav i {
-            margin-right: 10px;
-        }
-
-        /* Main Content Styles */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 20px;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .stat-card i {
-            font-size: 2em;
-            color: #007bff;
-            margin-bottom: 10px;
-        }
-
-        /* Table Styles */
-        .table-container {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        /* Section Styles */
-        .section {
-            display: none;
-            padding: 20px;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        /* Button Styles */
-        .btn-add {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-edit {
-            background-color: #ffc107;
-            color: #000;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .btn-submit {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 20px;
-            width: 90%;
-            max-width: 500px;
-            border-radius: 8px;
-            position: relative;
-        }
-
-        .close {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            font-size: 28px;
-            cursor: pointer;
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        /* Status Badge Styles */
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.85em;
-        }
-
-        .status-badge.pending {
-            background-color: #ffeeba;
-            color: #856404;
-        }
-
-        .status-badge.active {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .status-badge.inactive {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        /* Side Panel Styles */
-.side-panel {
-    position: fixed;
-    top: 0;
-    right: -500px;
-    width: 500px;
-    height: 100vh;
-    background: #fff;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-    transition: right 0.3s ease;
-    z-index: 1000;
-}
-
-.side-panel.active {
-    right: 0;
-}
-
-.panel-content {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-}
-
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.panel-header h2 {
-    margin: 0;
-    color: #333;
-    font-size: 1.5rem;
-}
-
-.close-panel {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-}
-
-/* Form Styles */
-.form-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.input-group {
-    flex: 1;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #555;
-    font-weight: 500;
-}
-
-.input-group input,
-.input-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.3s;
-}
-
-.input-group input:focus,
-.input-group select:focus {
-    border-color: #007bff;
-    outline: none;
-}
-
-.password-hint {
-    display: block;
-    margin-top: 5px;
-    color: #666;
-    font-size: 12px;
-}
-
-.form-actions {
-    margin-top: auto;
-    padding-top: 20px;
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-
-.btn-cancel {
-    padding: 10px 20px;
-    border: 1px solid #ddd;
-    background: #fff;
-    color: #666;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.btn-cancel:hover {
-    background: #f8f9fa;
-}
-
-.btn-submit {
-    padding: 10px 20px;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.btn-submit:hover {
-    background: #0056b3;
-}
-
-/* Overlay */
-.panel-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-}
-
-.panel-overlay.active {
-    display: block;
-}
-    </style>
     
 <!DOCTYPE html>
 <html lang="en">
@@ -447,6 +58,7 @@ $pendingUsers = $conn->query("SELECT COUNT(*) as count FROM users WHERE status='
                     <li><a href="#logs" data-section="logs"><i class="fas fa-history"></i> Logs</a></li>
                 </ul>
             </nav>
+
         </aside>
 
         <!-- Main Content -->
@@ -479,92 +91,104 @@ $pendingUsers = $conn->query("SELECT COUNT(*) as count FROM users WHERE status='
             </section>
 
             <!-- Managers Section -->
-            <section id="managers" class="section">
-                <div class="section-header">
-                    <h1>Managers</h1>
-                    <button onclick="showModal('addManagerModal')" class="btn-add">
-                        <i class="fas fa-plus"></i> Add Manager
-                    </button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Branch</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while($manager = $managers->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo $manager['id']; ?></td>
-                                <td><?php echo $manager['username']; ?></td>
-                                <td><?php echo $manager['email']; ?></td>
-                                <td><?php echo $manager['branch_name']; ?></td>
-                                <td>
-                                    <button onclick="editManager(<?php echo $manager['id']; ?>)" class="btn-edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="deleteManager(<?php echo $manager['id']; ?>)" class="btn-delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+<section id="managers" class="section">
+    <div class="section-header">
+        <h1>Managers</h1>
+        <button onclick="showModal('addManagerModal')" class="btn-add">
+            <i class="fas fa-plus"></i> Add Manager
+        </button>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Branch</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while($manager = $managers->fetch_assoc()): ?>
+                <tr>
+                    <td><?php echo $manager['id']; ?></td>
+                    <td><?php echo $manager['username']; ?></td>
+                    <td><?php echo $manager['email']; ?></td>
+                    <td><?php echo $manager['branch_name']; ?></td>
+                    <td>
+                        <!-- Edit button (optional, you can implement it later) -->
+                        <a href="edit_manager.php?id=<?php echo $manager['id']; ?>" class="btn-edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        
+                        <!-- Delete button with confirmation -->
+                        <a href="delete_manager.php?id=<?php echo $manager['id']; ?>" onclick="return confirm('Are you sure you want to delete this manager?');">
+                            <button class="btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </a>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
 
-            <!-- Branches Section -->
-            <section id="branches" class="section">
-                <div class="section-header">
-                    <h1>Branches</h1>
-                    <button onclick="showModal('addBranchModal')" class="btn-add">
-                        <i class="fas fa-plus"></i> Add Branch
-                    </button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Branch Name</th>
-                                <th>State</th>
-                                <th>City</th>
-                                <th>ZIP Code</th>
-                                <th>Assigned Manager</th>
-                                <th>Opening Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while($branch = $branches->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo $branch['id']; ?></td>
-                                <td><?php echo $branch['branch_name']; ?></td>
-                                <td><?php echo $branch['state']; ?></td>
-                                <td><?php echo $branch['city']; ?></td>
-                                <td><?php echo $branch['zip_code']; ?></td>
-                                <td><?php echo $branch['username']; ?></td>
-                                <td><?php echo $branch['opening_date']; ?></td>
-                                <td>
-                                    <button onclick="editBranch(<?php echo $branch['id']; ?>)" class="btn-edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="deleteBranch(<?php echo $branch['id']; ?>)" class="btn-delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+
+           <!-- Branches Section -->
+<section id="branches" class="section">
+    <div class="section-header">
+        <h1>Branches</h1>
+        <button onclick="showModal('addBranchModal')" class="btn-add">
+            <i class="fas fa-plus"></i> Add Branch
+        </button>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Branch Name</th>
+                    <th>State</th>
+                    <th>City</th>
+                    <th>ZIP Code</th>
+                    <th>Assigned Manager</th>
+                    <th>Opening Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while($branch = $branches->fetch_assoc()): ?>
+                <tr>
+                    <td><?php echo $branch['id']; ?></td>
+                    <td><?php echo $branch['branch_name']; ?></td>
+                    <td><?php echo $branch['state']; ?></td>
+                    <td><?php echo $branch['city']; ?></td>
+                    <td><?php echo $branch['zip_code']; ?></td>
+                    <td><?php echo $branch['username']; ?></td>
+                    <td><?php echo $branch['opening_date']; ?></td>
+                    <td>
+                        <!-- Edit button (optional, can be implemented later) -->
+                        <a href="edit_branch.php?id=<?php echo $branch['id']; ?>" class="btn-edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        
+                        <!-- Delete button with confirmation -->
+                        <a href="delete_branch.php?id=<?php echo $branch['id']; ?>" onclick="return confirm('Are you sure you want to delete this branch?');">
+                            <button class="btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </a>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+
 
             <!-- Users Section -->
             <section id="users" class="section">
@@ -597,38 +221,162 @@ $pendingUsers = $conn->query("SELECT COUNT(*) as count FROM users WHERE status='
                 </div>
             </section>
 
-            <!-- Logs Section -->
-            <section id="logs" class="section">
-                <h1>System Logs</h1>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Log ID</th>
-                                <th>Sender ID</th>
-                                <th>Receiver ID</th>
-                                <th>Source Mac</th>
-                                <th>Destination Mac</th>
-                                <th>Filename</th>
-                                <th>Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while($log = $logs->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo $log['log_id']; ?></td>
-                                <td><?php echo $log['sender_id']; ?></td>
-                                <td><?php echo $log['receiver_id']; ?></td>
-                                <td><?php echo $log['source_mac']; ?></td>
-                                <td><?php echo $log['destination_mac']; ?></td>
-                                <td><?php echo $log['filename']; ?></td>
-                                <td><?php echo $log['timestamp']; ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
+            <!-- Logs Section with Search and Report Features -->
+<section id="logs" class="section">
+    <h1>System Logs</h1>
+    
+    <!-- Search Form -->
+    <div class="search-container">
+        <form id="logSearchForm" method="GET" action="#logs">
+            <div class="search-row">
+                <div class="search-group">
+                    <label for="filename">Search by Filename:</label>
+                    <input type="text" id="filename" name="filename" value="<?php echo isset($_GET['filename']) ? htmlspecialchars($_GET['filename']) : ''; ?>">
                 </div>
-            </section>
+                <div class="search-buttons">
+                    <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
+                    <button type="button" onclick="clearSearch()" class="btn-clear"><i class="fas fa-times"></i> Clear</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <?php
+    // Handle search functionality
+    $searchConditions = [];
+    $searchParams = [];
+    
+    if (isset($_GET['filename']) && !empty($_GET['filename'])) {
+        $searchConditions[] = "l.filename LIKE ?";
+        $searchParams[] = "%" . $_GET['filename'] . "%";
+    }
+    
+    if (isset($_GET['date_from']) && !empty($_GET['date_from'])) {
+        $searchConditions[] = "DATE(l.timestamp) >= ?";
+        $searchParams[] = $_GET['date_from'];
+    }
+    
+    if (isset($_GET['date_to']) && !empty($_GET['date_to'])) {
+        $searchConditions[] = "DATE(l.timestamp) <= ?";
+        $searchParams[] = $_GET['date_to'];
+    }
+    
+    // Build the query
+    $sql = "SELECT l.*, 
+             s.id as sender_id, s.email as sender_email,
+             r.id as receiver_id, r.email as receiver_email
+             FROM logs l
+             LEFT JOIN users s ON l.sender_id = s.id
+             LEFT JOIN users r ON l.receiver_id = r.id";
+    
+    if (!empty($searchConditions)) {
+        $sql .= " WHERE " . implode(" AND ", $searchConditions);
+    }
+    
+    $sql .= " ORDER BY l.timestamp DESC";
+    
+    // Prepare and execute the statement
+    $stmt = $conn->prepare($sql);
+    
+    if (!empty($searchParams)) {
+        $types = str_repeat("s", count($searchParams)); // Assuming all parameters are strings
+        $stmt->bind_param($types, ...$searchParams);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    // Check if we have results to display
+    if ($result->num_rows > 0 && isset($_GET['filename'])):
+    ?>
+    
+    <!-- Search Results -->
+    <div class="results-header">
+        <h2>Search Results</h2>
+        <?php if (!empty($_GET['filename'])): ?>
+        <form action="generate_report.php" method="POST" target="_blank">
+            <input type="hidden" name="filename" value="<?php echo htmlspecialchars($_GET['filename']); ?>">
+            <button type="submit" class="btn-report"><i class="fas fa-file-export"></i> Generate Report</button>
+        </form>
+        <?php endif; ?>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>Sender</th>
+                    <th>Receiver</th>
+                    <th>Source Mac</th>
+                    <th>Destination Mac</th>
+                    <th>Filename</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while($log = $result->fetch_assoc()): ?>
+                <tr>
+                    <td style="color: red;"><?php echo $log['log_id']; ?></td>
+                    <td><?php echo $log['sender_id'] . ' (' . $log['sender_email'] . ')'; ?></td>
+                    <td><?php echo $log['receiver_id'] . ' (' . $log['receiver_email'] . ')'; ?></td>
+                    <td style="color: lightgreen;"><?php echo $log['source_mac']; ?></td>
+                    <td style="color: #0ef;"><?php echo $log['destination_mac']; ?></td>
+                    <td><?php echo $log['filename']; ?></td>
+                    <td><?php echo $log['timestamp']; ?></td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+    
+    <?php elseif (isset($_GET['filename'])): ?>
+    <div class="no-results">
+        <p>No logs found matching your search criteria.</p>
+    </div>
+    <?php else: ?>
+    
+    <!-- Default Logs Table (when no search performed) -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>Sender ID</th>
+                    <th>Receiver ID</th>
+                    <th>Source Mac</th>
+                    <th>Destination Mac</th>
+                    <th>Filename</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                $logs = $conn->query("SELECT l.*, 
+                        s.id as sender_id,
+                        r.id as receiver_id
+                        FROM logs l
+                        LEFT JOIN users s ON l.sender_id = s.id
+                        LEFT JOIN users r ON l.receiver_id = r.id
+                        ORDER BY l.timestamp DESC LIMIT 20");
+                
+                while($log = $logs->fetch_assoc()): 
+                ?>
+                <tr>
+                    <td style="color: red;"><?php echo $log['log_id']; ?></td>
+                    <td><?php echo $log['sender_id']; ?></td>
+                    <td><?php echo $log['receiver_id']; ?></td>
+                    <td style="color: lightgreen;"><?php echo $log['source_mac']; ?></td>
+                    <td style="color: #0ef;"><?php echo $log['destination_mac']; ?></td>
+                    <td><?php echo $log['filename']; ?></td>
+                    <td><?php echo $log['timestamp']; ?></td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
+</section>
         </main>
     </div>
 

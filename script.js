@@ -7,7 +7,7 @@ async function apiRequest(url, method = 'GET', data = null) {
                 'Content-Type': 'application/json'
             }
         };
-        
+
         if (data) {
             options.body = JSON.stringify(data);
         }
@@ -17,16 +17,18 @@ async function apiRequest(url, method = 'GET', data = null) {
             url += '?unassigned_only=true';
         }
 
-        const response = await fetch(url);
+        console.log(`Fetching URL: ${url} with method: ${method}`);
+        const response = await fetch(url, options);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const result = await response.json();
         if (!result) {
             throw new Error('No data received from server');
         }
-        
+
         return result;
     } catch (error) {
         console.error('API Request Error:', error);
@@ -34,7 +36,7 @@ async function apiRequest(url, method = 'GET', data = null) {
     }
 }
 
-// Panel Management
+// Enhanced Panel Management
 async function showPanel(panelId, mode = 'add', data = null) {
     const panel = document.getElementById(panelId);
     const overlay = document.createElement('div');
@@ -48,12 +50,17 @@ async function showPanel(panelId, mode = 'add', data = null) {
     // Update panel title based on mode
     const titleElement = panel.querySelector(`#${panelId}Title`);
     const entityName = panelId.replace('Panel', '');
-    titleElement.textContent = `${mode === 'add' ? 'Add New' : 'Edit'} ${entityName}`;
+    titleElement.textContent = `${mode === 'add' ? 'Add New' : 'Edit'} ${entityName.charAt(0).toUpperCase() + entityName.slice(1)}`;
+
+    // Reset form and remove any existing error messages
+    const form = panel.querySelector('form');
+    form.reset();
+    form.querySelectorAll('.error-message').forEach(el => el.remove());
+    form.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
 
     // If this is a manager panel, update available branches
     if (entityName === 'manager') {
         try {
-            // Get unassigned branches using the modified endpoint
             const availableBranches = await apiRequest('get_branches.php');
             const branchSelect = panel.querySelector('select[name="bid"]');
             
@@ -100,20 +107,27 @@ async function showPanel(panelId, mode = 'add', data = null) {
 
     // If editing, populate form with data
     if (mode === 'edit' && data) {
-        const form = panel.querySelector('form');
         for (const [key, value] of Object.entries(data)) {
             const input = form.querySelector(`[name="${key}"]`);
             if (input && key !== 'bid') { // Skip bid as it's handled above
                 input.value = value;
             }
         }
+
+        // Update form action for edit mode
+        const entityType = panelId.replace('Panel', '');
+        form.action = `edit_${entityType}.php?id=${data.id}`;
+    } else {
+        // Reset form action for add mode
+        const entityType = panelId.replace('Panel', '');
+        form.action = `add_${entityType}.php`;
     }
 
     // Close panel handlers
     const closePanel = () => {
         panel.classList.remove('active');
         overlay.remove();
-        panel.querySelector('form').reset();
+        form.reset();
     };
 
     panel.querySelector('.close-panel').onclick = closePanel;
@@ -131,10 +145,6 @@ async function editEntity(type, id) {
     try {
         const data = await apiRequest(`get_${type}.php?id=${encodeURIComponent(id)}`);
         await showPanel(`${type}Panel`, 'edit', data);
-        
-        // Update form action
-        const form = document.getElementById(`${type}Form`);
-        form.action = `update_${type}.php?id=${encodeURIComponent(id)}`;
     } catch (error) {
         console.error(`Error loading ${type} data:`, error);
         alert(`Failed to load ${type} data. Please try again.`);
@@ -193,12 +203,53 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const sectionId = this.getAttribute('data-section');
             document.getElementById(sectionId).classList.add('active');
+
+            // Update URL hash when switching tabs
+            window.location.hash = sectionId;
         });
     });
 
+    // Handle the active section when the page is loaded with a hash in the URL
+    const hash = window.location.hash;
+    if (hash) {
+        const sectionId = hash.substring(1); // Strip the '#' from the hash
+        const section = document.getElementById(sectionId);
+        const activeLink = document.querySelector(`.sidebar-nav a[data-section="${sectionId}"]`);
+
+        if (section && activeLink) {
+            navLinks.forEach(link => link.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+
+            activeLink.classList.add('active');
+            section.classList.add('active');
+        }
+    }
+
     // Update add buttons to use panel system
-    document.querySelector('button[onclick="showModal(\'addManagerModal\')"]')
-        .setAttribute('onclick', 'showPanel("managerPanel")');
-    document.querySelector('button[onclick="showModal(\'addBranchModal\')"]')
-        .setAttribute('onclick', 'showPanel("branchPanel")');
+    const addManagerButton = document.querySelector('button[onclick="showModal(\'addManagerModal\')"]');
+    if (addManagerButton) {
+        addManagerButton.setAttribute('onclick', 'showPanel("managerPanel")');
+    }
+
+    const addBranchButton = document.querySelector('button[onclick="showModal(\'addBranchModal\')"]');
+    if (addBranchButton) {
+        addBranchButton.setAttribute('onclick', 'showPanel("branchPanel")');
+    }
 });
+
+// Add this to your existing script.js file
+function clearSearch() {
+    const filenameInput = document.getElementById('filename');
+    const dateFromInput = document.getElementById('date_from');
+    const dateToInput = document.getElementById('date_to');
+    
+    if (filenameInput) filenameInput.value = '';
+    if (dateFromInput) dateFromInput.value = '';
+    if (dateToInput) dateToInput.value = '';
+    
+    // Optionally, submit the form to refresh the page without search parameters
+    const logSearchForm = document.getElementById('logSearchForm');
+    if (logSearchForm) {
+        logSearchForm.submit();
+    }
+}
