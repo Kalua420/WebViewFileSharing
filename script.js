@@ -1,3 +1,5 @@
+// Combined Admin Dashboard JavaScript
+
 // Utility function for API calls
 async function apiRequest(url, method = 'GET', data = null) {
     try {
@@ -42,6 +44,7 @@ async function showPanel(panelId, mode = 'add', data = null) {
     const overlay = document.createElement('div');
     overlay.className = 'panel-overlay';
     document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
 
     // Show panel and overlay
     panel.classList.add('active');
@@ -127,6 +130,7 @@ async function showPanel(panelId, mode = 'add', data = null) {
     const closePanel = () => {
         panel.classList.remove('active');
         overlay.remove();
+        document.body.style.overflow = ''; // Enable scrolling
         form.reset();
     };
 
@@ -186,35 +190,69 @@ const deleteManager = (id) => deleteEntity('manager', id);
 const editBranch = (id) => editEntity('branch', id);
 const deleteBranch = (id) => deleteEntity('branch', id);
 
-// Navigation functionality
+// Modal functionality (legacy support)
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+}
+
+// Clear search function
+function clearSearch() {
+    const searchForm = document.getElementById('logSearchForm');
+    if (searchForm) {
+        const formInputs = searchForm.querySelectorAll('input, select');
+        formInputs.forEach(field => {
+            field.value = '';
+        });
+        searchForm.submit();
+    }
+}
+
+// Main initialization
 document.addEventListener('DOMContentLoaded', function() {
-    // Navigation setup
+    // Section Navigation
     const navLinks = document.querySelectorAll('.sidebar-nav a');
     const sections = document.querySelectorAll('.section');
-
+    
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             
+            // Remove active class from all links and sections
             navLinks.forEach(l => l.classList.remove('active'));
             sections.forEach(s => s.classList.remove('active'));
             
+            // Add active class to clicked link
             this.classList.add('active');
             
-            const sectionId = this.getAttribute('data-section');
-            document.getElementById(sectionId).classList.add('active');
-
-            // Update URL hash when switching tabs
-            window.location.hash = sectionId;
+            // Show the corresponding section
+            let targetSectionId = this.getAttribute('data-section');
+            if (!targetSectionId) {
+                // Support for href-based navigation (legacy)
+                const href = this.getAttribute('href');
+                targetSectionId = href ? href.substring(1) : null;
+            }
+            
+            if (targetSectionId) {
+                const targetSection = document.getElementById(targetSectionId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    // Update URL hash when switching tabs
+                    window.location.hash = targetSectionId;
+                }
+            }
         });
     });
-
+    
     // Handle the active section when the page is loaded with a hash in the URL
     const hash = window.location.hash;
     if (hash) {
         const sectionId = hash.substring(1); // Strip the '#' from the hash
         const section = document.getElementById(sectionId);
-        const activeLink = document.querySelector(`.sidebar-nav a[data-section="${sectionId}"]`);
+        const activeLink = document.querySelector(`.sidebar-nav a[data-section="${sectionId}"], .sidebar-nav a[href="#${sectionId}"]`);
 
         if (section && activeLink) {
             navLinks.forEach(link => link.classList.remove('active'));
@@ -225,31 +263,103 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update add buttons to use panel system
-    const addManagerButton = document.querySelector('button[onclick="showModal(\'addManagerModal\')"]');
-    if (addManagerButton) {
-        addManagerButton.setAttribute('onclick', 'showPanel("managerPanel")');
-    }
+    // Modal functionality
+    const modals = document.querySelectorAll('.modal');
+    const closeButtons = document.querySelectorAll('.close');
+    
+    // Close modal when clicking the X
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            modal.style.display = 'none';
+            document.body.style.overflow = ''; // Enable scrolling
+        });
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(e) {
+        modals.forEach(modal => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = ''; // Enable scrolling
+            }
+        });
+    });
+    
+    // Update buttons to use panel system instead of modals
+    const addManagerButtons = document.querySelectorAll('button[onclick*="addManagerModal"], .btn-add[onclick*="addManagerModal"]');
+    addManagerButtons.forEach(button => {
+        button.setAttribute('onclick', 'showPanel("managerPanel")');
+    });
 
-    const addBranchButton = document.querySelector('button[onclick="showModal(\'addBranchModal\')"]');
-    if (addBranchButton) {
-        addBranchButton.setAttribute('onclick', 'showPanel("branchPanel")');
+    const addBranchButtons = document.querySelectorAll('button[onclick*="addBranchModal"], .btn-add[onclick*="addBranchModal"]');
+    addBranchButtons.forEach(button => {
+        button.setAttribute('onclick', 'showPanel("branchPanel")');
+    });
+    
+    // Edit functionality
+    const editButtons = document.querySelectorAll('.btn-edit');
+    
+    editButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const href = this.getAttribute('href');
+            if (!href) return;
+            
+            const isManager = href.includes('edit_manager.php');
+            const id = href.split('=')[1];
+            
+            if (isManager) {
+                editManager(id);
+            } else {
+                editBranch(id);
+            }
+        });
+    });
+    
+    // Make table rows clickable for details
+    const userRows = document.querySelectorAll('#users table tbody tr');
+    
+    userRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const userId = this.cells[0].textContent;
+            
+            // Toggle a class for a selected state
+            userRows.forEach(r => r.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Optional: Show additional details for the selected user
+            // This could trigger a panel or load data via API
+        });
+    });
+    
+    // Responsive sidebar toggle
+    let sidebarToggle = document.querySelector('.sidebar-toggle');
+    if (!sidebarToggle) {
+        sidebarToggle = document.createElement('button');
+        sidebarToggle.className = 'sidebar-toggle';
+        sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.prepend(sidebarToggle);
+        }
     }
+    
+    sidebarToggle.addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('collapsed');
+        document.querySelector('.main-content').classList.toggle('expanded');
+    });
+    
+    // Add tooltip functionality for buttons
+    const actionButtons = document.querySelectorAll('.btn-edit, .btn-delete');
+    
+    actionButtons.forEach(button => {
+        // Using title attribute as a simple tooltip
+        if (button.classList.contains('btn-edit') && !button.hasAttribute('title')) {
+            button.setAttribute('title', 'Edit');
+        } else if (button.classList.contains('btn-delete') && !button.hasAttribute('title')) {
+            button.setAttribute('title', 'Delete');
+        }
+    });
 });
-
-// Add this to your existing script.js file
-function clearSearch() {
-    const filenameInput = document.getElementById('filename');
-    const dateFromInput = document.getElementById('date_from');
-    const dateToInput = document.getElementById('date_to');
-    
-    if (filenameInput) filenameInput.value = '';
-    if (dateFromInput) dateFromInput.value = '';
-    if (dateToInput) dateToInput.value = '';
-    
-    // Optionally, submit the form to refresh the page without search parameters
-    const logSearchForm = document.getElementById('logSearchForm');
-    if (logSearchForm) {
-        logSearchForm.submit();
-    }
-}

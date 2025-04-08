@@ -1,50 +1,11 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Mar 06, 2025 at 06:27 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `project`
---
-
--- --------------------------------------------------------
-
---
--- Table structure for table `admin`
---
-
 CREATE TABLE `admin` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `admin`
---
-
 INSERT INTO `admin` (`id`, `username`, `password`) VALUES
 (2, 'admin', '$2y$10$/eEIhMPSLS4BPAuqGOTy0u7OLWOAI4o.u0VjJSLRVCS9hRHb4dOzi');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `branch`
---
 
 CREATE TABLE `branch` (
   `id` int(11) NOT NULL,
@@ -55,22 +16,12 @@ CREATE TABLE `branch` (
   `opening_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `branch`
---
-
 INSERT INTO `branch` (`id`, `branch_name`, `state`, `city`, `zip_code`, `opening_date`) VALUES
 (29, 'Pathali Pahar', 'Assam', 'North Lakhimpur', '784163', '2025-03-05'),
 (30, 'Harmutty', 'Assam', 'North Lakhimpur', '784162', '2025-03-05'),
-(31, 'Banderdewa', 'Assam', 'North Lakhimpur', '784161', '2025-03-05'),
+(31, 'Banderdewa', 'Assam', 'North Lakhimpur', '784162', '2025-03-05'),
 (33, 'Sonapur', 'Maharastra', 'Mumbai', '547896', '2025-03-05'),
 (34, 'Laluk', 'Assam', 'North Lakhimpur', '784162', '2025-03-06');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `logs`
---
 
 CREATE TABLE `logs` (
   `log_id` int(11) NOT NULL,
@@ -82,10 +33,6 @@ CREATE TABLE `logs` (
   `timestamp` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `logs`
---
-
 INSERT INTO `logs` (`log_id`, `sender_id`, `receiver_id`, `source_mac`, `destination_mac`, `filename`, `timestamp`) VALUES
 (1, 1, 2, 'DA:26:F8:55:11:FD', '48:A4:93:44:A4:72', 'chrdata1741080750352.jpg', '2025-03-05 22:23:57'),
 (2, 1, 2, 'DA:26:F8:55:11:FD', '48:A4:93:44:A4:72', '1000296791-Photoroom.png', '2025-03-05 22:24:02'),
@@ -96,19 +43,7 @@ INSERT INTO `logs` (`log_id`, `sender_id`, `receiver_id`, `source_mac`, `destina
 (7, 2, 1, 'B4:F7:A1:84:8C:4D', 'DA:26:F8:55:11:FD', 'shadowy_grove_by_asymoney_diqgy0f-fullview.jpg', '2025-03-05 22:24:25'),
 (8, 1, 2, 'DA:26:F8:55:11:FD', '48:A4:93:44:A4:72', '821.png', '2025-03-06 11:03:40'),
 (9, 1, 2, 'DA:26:F8:55:11:FD', '48:A4:93:44:A4:72', '1000296791-Photoroom.png', '2025-03-06 11:03:41'),
-(10, 1, 2, 'DA:26:F8:55:11:FD', '48:A4:93:44:A4:72', 'IMG_20250128_173222.png', '2025-03-06 11:04:08'),
-(11, 1, 2, 'DA:26:F8:55:11:FD', '48:A4:93:44:A4:72', 'IMG_20250128_173222.png', '2025-03-06 11:04:12'),
-(12, 1, 1, '40:4E:36:FA:D3:7B', 'DA:26:F8:55:11:FD', 'Ben.10.Omniverse.S01E10.720p.Hindi.English.Esubs - Vegamovies.to.mkv', '2025-03-06 11:06:21'),
-(13, 1, 1, '40:4E:36:FA:D3:7B', 'DA:26:F8:55:11:FD', 'FB_IMG_1741232963354.jpg', '2025-03-06 11:06:37'),
-(14, 2, 4, '00:23:76:20:EF:ED', 'B4:C4:FC:90:DB:BC', 'FB_IMG_1741232963354.jpg', '2025-03-06 11:51:11'),
-(15, 2, 4, '00:23:76:20:EF:ED', 'B4:C4:FC:90:DB:BC', '1000296791-Photoroom.png', '2025-03-06 11:51:12'),
-(16, 2, 4, '00:23:76:20:EF:ED', 'B4:C4:FC:90:DB:BC', 'file-8EMp7S3ZQzL6NhkA7LMBdr.webp', '2025-03-06 11:51:14');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `manager`
---
+(10, 1, 2, 'DA:26:F8:55:11:FD', '48:A4:93:44:A4:72', 'IMG_20250128_173222.png', '2025-03-06 11:04:08');
 
 CREATE TABLE `manager` (
   `id` int(11) NOT NULL,
@@ -119,18 +54,10 @@ CREATE TABLE `manager` (
   `profile_pic` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `manager`
---
-
 INSERT INTO `manager` (`id`, `bid`, `username`, `email`, `password`, `profile_pic`) VALUES
-(9, 29, 'Tutu', 'tutu@manager.com', '$2y$10$NHg3zSE2PRoNjaYH2UqK6uCbIDBHzuST5mqxVKDWNQvnmxmlr6Gvi', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
+(9, 29, 'Tutu', 'tutu@manager.com', '$2y$10$UZb2knBCpF7g5fujYYeYnOmO3jYWhcbKQDnZU2lCj2oIRVnR40tqa', 'manager_9.jpg'),
+(11, 30, 'Guddu Kumar', 'guddu@manager.com', '$2y$10$.0RlQI0HK10bsD3wEQGcve/HsZfaJEvfFPvsChRfGzbaJ9eC8KTDG', 'manager_11.png'),
+(12, 31, 'Rajen', 'rajen@manager.com', '$2y$10$cWdu2bsXUtNC.2ti9p5w5uX6JWE6e5OIdQBCwGAts3knyRr.AdSWO', NULL);
 
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
@@ -144,10 +71,6 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `users`
---
-
 INSERT INTO `users` (`id`, `bid`, `phone`, `email`, `password`, `aadhar`, `address`, `status`, `created_at`) VALUES
 (1, 29, '7845123658', 'babu@user.com', '166f35e44c9f139c9f98aa9da61dc9f9d61bc86088d7968477c055e8d31a06f7', '845123978513', 'Pathali Pahar, Assam , 784163', 'approved', '2025-03-05 16:47:29'),
 (2, 31, '7894612356', 'john@user.com', 'b4b597c714a8f49103da4dab0266af0ee0ae4f8575250a84855c3d76941cd422', '452139497851', 'Banderdewa, Assam, 784162', 'approved', '2025-03-05 16:48:38'),
@@ -155,93 +78,41 @@ INSERT INTO `users` (`id`, `bid`, `phone`, `email`, `password`, `aadhar`, `addre
 (4, 30, '2258800000', 'guds@gmail.com', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', '555588888822', 'guds111', 'approved', '2025-03-06 06:08:32'),
 (5, 34, '6464946464', 'michael@user.com', '27cc6994fc1c01ce6659c6bddca9b69c4c6a9418065e612c69d110b3f7b11f8a', '543194666136', 'Mirzapur', 'pending', '2025-03-06 16:15:09');
 
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `admin`
---
 ALTER TABLE `admin`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `branch`
---
 ALTER TABLE `branch`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `logs`
---
 ALTER TABLE `logs`
   ADD PRIMARY KEY (`log_id`);
 
---
--- Indexes for table `manager`
---
 ALTER TABLE `manager`
   ADD PRIMARY KEY (`id`),
   ADD KEY `bid` (`bid`);
 
---
--- Indexes for table `users`
---
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD KEY `bid` (`bid`);
 
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `admin`
---
 ALTER TABLE `admin`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
---
--- AUTO_INCREMENT for table `branch`
---
 ALTER TABLE `branch`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
---
--- AUTO_INCREMENT for table `logs`
---
 ALTER TABLE `logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
 
---
--- AUTO_INCREMENT for table `manager`
---
 ALTER TABLE `manager`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
---
--- AUTO_INCREMENT for table `users`
---
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `manager`
---
 ALTER TABLE `manager`
   ADD CONSTRAINT `manager_ibfk_1` FOREIGN KEY (`bid`) REFERENCES `branch` (`id`);
 
---
--- Constraints for table `users`
---
 ALTER TABLE `users`
   ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`bid`) REFERENCES `branch` (`id`) ON UPDATE CASCADE;
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

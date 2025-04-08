@@ -1,3 +1,27 @@
+<?php
+// Start the session at the very beginning
+session_start();
+require_once 'db_connection.php';
+
+// Success and error messages
+if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success">
+        <?php 
+        echo $_SESSION['success'];
+        unset($_SESSION['success']);
+        ?>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger">
+        <?php 
+        echo $_SESSION['error'];
+        unset($_SESSION['error']);
+        ?>
+    </div>
+<?php endif; ?>
+
 <?php if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success">
         <?php 
@@ -17,7 +41,6 @@
 <?php endif; ?>
 
 <?php
-session_start();
 require_once 'db_connection.php';
 
 // Fetch data for dashboard
@@ -58,7 +81,6 @@ $pendingUsers = $conn->query("SELECT COUNT(*) as count FROM users WHERE status='
                     <li><a href="#logs" data-section="logs"><i class="fas fa-history"></i> Logs</a></li>
                 </ul>
             </nav>
-
         </aside>
 
         <!-- Main Content -->
